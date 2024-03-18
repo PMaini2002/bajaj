@@ -2,52 +2,71 @@ const express = require("express");
 const bodyParser = require("body-parser");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
-// Middleware
+
+const USER_ID = "john_doe_17091999";
+const EMAIL = "john@xyz.com";
+const ROLL_NUMBER = "ABCD123";
+
+
 app.use(bodyParser.json());
 
-// Route: /bfhl
+
+const processArrays = (inputArray) => {
+  const evenNumbers = inputArray
+    .filter((num) => num % 2 === 0 && typeof num === "number")
+    .map((num) => String(num));
+  const oddNumbers = inputArray
+    .filter((num) => num % 2 !== 0 && typeof num === "number")
+    .map((num) => String(num));
+  const alphabets = inputArray.filter(
+    (char) => typeof char === "string" && char.match(/[a-zA-Z]/)
+  );
+
+  return { evenNumbers, oddNumbers, alphabets };
+};
+
+// POST /process_array
 app.post("/bfhl", (req, res) => {
   try {
-    const data = req.body.data;
+    const inputArray = req.body.array;
 
-    // Sample user details
-    const user_id = "john_doe_17091999";
-    const email = "john@xyz.com";
-    const roll_number = "ABCD123";
+    if (!inputArray) {
+      throw new Error("Invalid input. 'array' key is missing.");
+    }
 
-    // Arrays to store even numbers, odd numbers, and alphabets
-    let even_numbers = [];
-    let odd_numbers = [];
-    let alphabets = [];
+    if (!Array.isArray(inputArray)) {
+      throw new Error("Invalid input. 'array' key is not an array.");
+    }
 
-    data.forEach((element) => {
-      const isNumber = !isNaN(element);
-
-      if (isNumber) {
-        if (element % 2 === 0) {
-          even_numbers.push(element.toString());
-        } else {
-          odd_numbers.push(element.toString());
-        }
-      } else if (typeof element === "string") {
-        const alphaRegex = /^[a-zA-Z]+$/;
-        if (alphaRegex.test(element)) {
-          alphabets.push(element.toUpperCase());
-        }
-      }
-    });
+    const { evenNumbers, oddNumbers, alphabets } = processArrays(inputArray);
 
     const response = {
       is_success: true,
-      user_id: user_id,
-      email: email,
-      roll_number: roll_number,
-      even_numbers: even_numbers,
-      odd_numbers: odd_numbers,
+      user_id: USER_ID,
+      email: EMAIL,
+      roll_number: ROLL_NUMBER,
+      even_numbers: evenNumbers,
+      odd_numbers: oddNumbers,
       alphabets: alphabets,
     };
+
+    res.status(200).json(response);
+  } catch (error) {
+    const errorResponse = {
+      is_success: false,
+      message: error.message || "An error occurred.",
+    };
+
+    res.status(400).json(errorResponse);
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+
 
     res.json(response);
   } catch (error) {
